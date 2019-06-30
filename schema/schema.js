@@ -1,24 +1,113 @@
 const graphql = require('graphql');
 
 //ES6 destructuring
-const { GraphQLObjectType, GraphQLString, GraphQLSchema } = graphql;
+const {
+    GraphQLObjectType,
+    GraphQLString,
+    GraphQLSchema,
+    GraphQLID,
+    GraphQLInt,
+    GraphQLList
+} = graphql;
 
 //Dummy Data
-var books = [
-    {name: 'Book 1', genre: 'Animation', id: 1},
-    {name: 'Book 2', genre: 'Fantasy', id: 2},
-    {name: 'Book 3', genre: 'Sci-Fi', id: 3},
-    {name: 'Book 4', genre: 'Fantasy', id: 4},
-    {name: 'Book 5', genre: 'Animation', id: 5}
+var books = [{
+        name: 'The Lost Sun',
+        genre: 'Animation',
+        id: 1,
+        authorId: 3
+    },
+    {
+        name: 'Long Last',
+        genre: 'Fantasy',
+        id: 2,
+        authorId: 1
+    },
+    {
+        name: 'Fire in the Stars',
+        genre: 'Sci-Fi',
+        id: 3,
+        authorId: 3
+    },
+    {
+        name: 'Hell Fire',
+        genre: 'Sci-Fi',
+        id: 4,
+        authorId: 2
+    },
+    {
+        name: 'Die Hard',
+        genre: 'Sci-Fi',
+        id: 5,
+        authorId: 1
+    },
+    {
+        name: 'Batman',
+        genre: 'Comics',
+        id: 6,
+        authorId: 1
+    }
+];
+
+var authors = [{
+    name: 'Ashrf',
+    age: 43,
+    id: 1
+},
+{
+    name: 'Asif',
+    age: 40,
+    id: 2
+},{
+    name: 'JK',
+    age: 53,
+    id: 3
+},
 ];
 
 
 const BookType = new GraphQLObjectType({
     name: 'Book',
     fields: () => ({
-        id: { type: GraphQLString },
-        name: { type: GraphQLString },
-        genre: { type: GraphQLString }
+        id: {
+            type: GraphQLID
+        },
+        name: {
+            type: GraphQLString
+        },
+        genre: {
+            type: GraphQLString
+        },
+        author: {
+            type: AuthorType,
+            resolve(parent, args){
+                //code to get data from DB
+                let value = findAuthor(parent.authorId)
+                return value;
+            }
+        }
+    })
+});
+
+const AuthorType = new GraphQLObjectType({
+    name: 'Author',
+    fields: () => ({
+        id: {
+            type: GraphQLID
+        },
+        name: {
+            type: GraphQLString
+        },
+        age: {
+            type: GraphQLInt
+        },
+        books: {
+            type: new GraphQLList(BookType),
+            resolve(parent, args){
+                let value = books.filter(book => book.authorId === parent.id);
+                return value;
+            }
+        }
     })
 });
 
@@ -28,21 +117,47 @@ const RootQuery = new GraphQLObjectType({
     fields: {
         book: {
             type: BookType,
-            args: { id: { type: GraphQLString} },
-            resolve(parent, args){
+            args: {
+                id: {
+                    type: GraphQLID
+                }
+            },
+            resolve(parent, args) {
                 //code to get data from DB
                 let value = null;
-                books.forEach((book)=>{
+                books.forEach((book) => {
                     id = book.id.toString();
-                    if(id === args.id){
+                    if (id === args.id) {
                         value = book;
                     }
                 });
                 return value;
             }
+        },
+        author: {
+            type: AuthorType,
+            args: { id: { type: GraphQLID } },
+            resolve(parent, args){
+                //code to get author
+                let value = findAuthor(args.id);
+                return value;
+            }
         }
     }
 });
+
+
+function findAuthor(argId){
+    let value = null;
+    authors.forEach((author) => {
+        let id = author.id.toString();
+        let argsId = argId.toString();
+        if (id === argsId) {
+            value = author;
+        }
+    });
+    return value;
+}
 
 module.exports = new GraphQLSchema({
     query: RootQuery
