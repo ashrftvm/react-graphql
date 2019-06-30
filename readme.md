@@ -13,6 +13,7 @@
 1. Install Nodejs globally
     [Download Node](https://nodejs.org/en/ "https://nodejs.org/en/")
 2. Create new App folder and install Express in it
+    ``npm init``
     ``npm i express --save``
 3. Install GraphQL and Express GraphQL
     ``npm i graphql express-graphql``
